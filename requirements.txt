@@ -3,7 +3,6 @@ matplotlib
 seaborn
 datetime
 numpy
-pickle
 
 ###### Requirements with Version Specifiers ######
 pandas >= 1.3.5           

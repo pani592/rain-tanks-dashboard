@@ -59,23 +59,23 @@ if d_mode == "Run Sim":
         st.write("Press 'Run Simultation' to view results")
 
 
-if d_mode == "Show Results":
+# if d_mode == "Show Results":
 
-    st.write('Example Results')
+#     st.write('Example Results')
 
-    @st.cache() 
-    def read_data(pickle_path):
-        file = open(pickle_path, 'rb')
-        dtr = pk.load(file)
-        file.close()
+#     @st.cache() 
+#     def read_data(pickle_path):
+#         file = open(pickle_path, 'rb')
+#         dtr = pk.load(file)
+#         file.close()
 
-        return dtr
+#         return dtr
 
-    pickle_path = 'data/temp_data/2022-09-02/SummerTank1.pkl'
-    dtr = read_data(pickle_path)
+#     pickle_path = 'data/temp_data/2022-09-02/SummerTank1.pkl'
+#     dtr = read_data(pickle_path)
 
-    fig = quick_summary_report(dtr = dtr, timestep = 1440)
-    st.pyplot(fig)
+#     fig = quick_summary_report(dtr = dtr, timestep = 1440)
+#     st.pyplot(fig)
 
 
 ######################################################

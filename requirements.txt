@@ -1,0 +1,5 @@
+###### Requirements without Version Specifiers ######
+matplotlib
+
+###### Requirements with Version Specifiers ######
+pandas >= 1.3.5           

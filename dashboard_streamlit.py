@@ -93,7 +93,7 @@ if d_mode == "Standard Tank":
     RoofArea = st.sidebar.selectbox('Select Roof Area', (100,150,200,250,300),index=1)
     StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
     StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
-    st.write(f"Selected: Tank Capacity: {Capacity} kL | Occupancy: {Occupancy} | Roof Area: {RoofArea}m2 ")
+    st.write(f"Selected Parameters: Tank Capacity: {Capacity} kL | Occupancy: {Occupancy} | Roof Area: {RoofArea}m2 ")
     st.write(f"Default Parameters: Base Demand = 195 l/p/day")
     st.write("---")
 
@@ -117,7 +117,7 @@ if d_mode == "Standard Tank":
         st.write(f'Min Peak Reduction: {output[2]}%')
     else:
         # Placeholder Progress Bar
-        st.write("Press 'Run Simultation' to view results")
+        st.write("Press 'Run Simulation' to view results")
 
 
 if d_mode == "Drought Control":
@@ -129,7 +129,7 @@ if d_mode == "Drought Control":
     # RoofArea = st.sidebar.selectbox('Select Roof Area', (100,200,300),index=1)
     StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
     StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
-    st.write(f"Selected: Tank Capacity: {Capacity} kL")
+    st.write(f"Selected Parameters: Tank Capacity: {Capacity} kL")
     st.write(f"Default Parameters: Occupancy: 3 | Roof Area: 200m2  Base Demand = 195 l/p/day")
     st.write("---")
 
@@ -155,4 +155,4 @@ if d_mode == "Drought Control":
 
     else:
         # Placeholder Progress Bar
-        st.write("Press 'Run Simultation' to view results")
+        st.write("Press 'Run Simulation' to view results")

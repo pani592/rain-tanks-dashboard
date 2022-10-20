@@ -1,17 +1,16 @@
 # streamlit run dashboard_streamlit.py
 # https://blog.streamlit.io/make-your-st-pyplot-interactive/
 
-# https://docs.streamlit.io/streamlit-cloud/get-started/deploy-an-app
-# https://docs.streamlit.io/streamlit-cloud/get-started/share-your-app#adding-viewers-from-the-app
-
-# Would be cool to add the final figure plots to this as well for fun
-
-
 import streamlit as st
 import pandas as pd
-import pickle as pk
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+import pandas as pd
+import seaborn as sns
+sns.set()
+sns.set(rc={'figure.figsize':(10,8)})
 
-from plotting import *
 from model import *
 
 xopts_final = {}
@@ -22,19 +21,116 @@ xopts_final[15] = [0.418, 0.284, 0.015, 0.222, 0.397, 0.209, 0.5, 0.108, 0.334, 
 xopts_final[20] = [0.181, 0.015, 0.2, 0.305, 0.213, 0.483, 0.249, 0.217, 0.278, 0.155, 0.356, 0.212, 0.29, 0.438, 0.452, 0.567, 0.683, 0.697, 0.717, 0.803, 0.516, 0.852, 0.525, 0.382] #1800
 xopts_final[25] = [0.135, 0.437, 0.064, 0.056, 0.186, 0.107, 0.211, 0.198, 0.336, 0.131, 0.059, 0.195, 0.407, 0.422, 0.56, 0.53, 0.963, 0.9, 0.937, 0.752, 0.997, 0.706, 0.743, 0.432] #1362
 
-d_mode = st.sidebar.radio('Select Dashboard Mode', ("Run Sim", "Show Results"))
 
-if d_mode == "Run Sim":
+def plotfig(sim):
+    # Can either pass in simulation output itself, or just datarecords + timestep
+    dtr = sim.data_records
+    if sim.Tank.demand_interval == 60:
+        timestep = 60
+        n = 24
+        label_use = '[L/Hr]'
+    else:
+        timestep = 1440
+        n = 1
+        label_use = '[L/Day]'
+
+    fig, axs = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False)
+    #############################################################
+    # Rainfall Inverted
+    ax_inv = axs[0].twinx()
+    ax_inv.invert_yaxis()
+    ax_inv.plot(dtr.DateAndTime, dtr.Rainfall_litres, 'b', alpha=0.3, label='Rainfall On Roof '+label_use)
+    ax_inv.set_ylabel('Rainfall '+label_use, size=14)
+    ax_inv.legend(loc='lower right',  bbox_to_anchor= (1,-.3))
+    ax_inv.grid(False)
+
+    # Tank Volume
+    axs[0].plot(dtr.DateAndTime, dtr.Volume/1000, 'k', label='Tank Volume [kL]') # can do tank level %
+    axs[0].set_ylabel('Tank Volume [kL]', size=14)
+    axs[0].set_ylim(ymin=0)
+    axs[0].legend(loc='lower right',  bbox_to_anchor= (.25,-.3))
+    axs[0].set_title('Tank Volume and Rainfall', size=14)
+
+    #############################################################
+    mains = pd.to_numeric(sliding_window_view(dtr.MainsDemand, 10).mean(axis=1))
+    total = pd.to_numeric(sliding_window_view(dtr.Demand, 10).mean(axis=1))
+
+    n = 10
+    x = pd.to_datetime(dtr.DateAndTime[:-(n - 1)])
+    axs[1].fill_between(x.values, mains, total,  color='g', alpha = 0.2) # fill between y1 and y0
+    axs[1].fill_between(x.values, 0, mains,color='r', alpha = 0.2) # fill between y1 and y0
+    axs[1].plot(x, total, 'g', label='Tank Demand')
+    axs[1].plot(x, mains, 'r--', label='Mains Demand')
+    axs[1].set_ylabel('Litres/day', size=14)
+    axs[1].set_ylim(ymin=0)
+    axs[1].legend(loc='lower right',  bbox_to_anchor= (1,-.3), ncol=2)
+    axs[1].set_title('10 day Rolling Demand - Mains vs Tank', size=14)
+
+    fig.supxlabel('Date')
+    # fig.suptitle('HAT Simulation Results', size=16)
+    fig.tight_layout()
+    #############################################################
+    plt.show()
+
+    plt.close()
+
+    totalmains = round(dtr.MainsDemand.sum())
+    peakreduction = round((1-(mains.max()/total.max()))*100,2)
+
+    return [fig,totalmains,peakreduction]
+
+
+
+
+d_mode = st.sidebar.radio('Select Dashboard Mode', ("Standard Tank", "Drought Control"))
+
+if d_mode == "Standard Tank":
     st.write(f"Select Parameters using the sidebar.")
 
-    Policy = st.sidebar.selectbox('Select Policy', (None, 'SeasonalTank'))
+    # Policy = st.sidebar.selectbox('Select Policy', (None, 'SeasonalTank'))
     Capacity = st.sidebar.selectbox('Select Tank Size [kL]', (25, 20, 15, 10, 5),index=2)
-    Occupancy = st.sidebar.selectbox('Select Occupancy', (1,2,3,4,5),index=2)
-    RoofArea = st.sidebar.selectbox('Select Roof Area', (100,150,200,250,300),index=2)
+    Occupancy = st.sidebar.selectbox('Select Occupancy', (1,2,3,4,5),index=1)
+    RoofArea = st.sidebar.selectbox('Select Roof Area', (100,150,200,250,300),index=1)
     StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
     StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
-    st.write(f"Selected: | {Policy} | Tank Size: {Capacity} kL")
-    st.write(f"Default Parameters: | Roof Area: {RoofArea}m2 | Base Demand = 195 l/p/day")
+    st.write(f"Selected: Tank Capacity: {Capacity} kL | Occupancy: {Occupancy} | Roof Area: {RoofArea}m2 ")
+    st.write(f"Default Parameters: Base Demand = 195 l/p/day")
+    st.write("---")
+
+    if st.sidebar.button('Run Simulation'):
+        st.write('Simulation Running...')
+        START_DATE = f"7/1/{StartYr}" 
+        END_DATE = f"7/1/{StopYr}"
+        Interval = 1440 # Has to be hourly timesteps for dashboard speed.
+
+        tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=RoofArea, harvest_ratio=1)
+        tank.set_demand(Interval, Occupancy)
+        sim = Simulation(tank, START_DATE, END_DATE)
+        sim.set_policy(policy=None)
+        sim.run_simulation()
+
+        output = plotfig(sim) 
+        st.write('Simulation Complete!')
+       
+        st.pyplot(output[0])
+        st.write(f'Total Mains Usage: {output[1]} litres')
+        st.write(f'Min Peak Reduction: {output[2]}%')
+    else:
+        # Placeholder Progress Bar
+        st.write("Press 'Run Simultation' to view results")
+
+
+if d_mode == "Drought Control":
+
+    st.write('Example Results of Drought Control Policy')
+
+    Capacity = st.sidebar.selectbox('Select Tank Size [kL]', (25, 20, 15, 10, 5),index=2)
+    # Occupancy = st.sidebar.selectbox('Select Occupancy', (1,3,5),index=1)
+    # RoofArea = st.sidebar.selectbox('Select Roof Area', (100,200,300),index=1)
+    StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
+    StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
+    st.write(f"Selected: Tank Capacity: {Capacity} kL")
+    st.write(f"Default Parameters: Occupancy: 3 | Roof Area: 200m2  Base Demand = 195 l/p/day")
     st.write("---")
 
     if st.sidebar.button('Run Simulation'):
@@ -44,44 +140,19 @@ if d_mode == "Run Sim":
         Interval = 1440 # Has to be hourly timesteps for dashboard speed.
 
         att = {'a_vals': xopts_final[Capacity][0:12], 'b_vals': xopts_final[Capacity][12:24]}
-        tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=RoofArea, harvest_ratio=1)
-        tank.set_demand(Interval, Occupancy)
+        tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=200, harvest_ratio=1)
+        tank.set_demand(Interval, 3)
         sim = Simulation(tank, START_DATE, END_DATE)
-        sim.set_policy(policy=Policy, attributes=att)
+        sim.set_policy(policy='SeasonalTank', attributes = att)
         sim.run_simulation()
 
-        fig = quick_summary_report(dtr = sim.data_records, timestep = 1440) 
+        output = plotfig(sim) 
         st.write('Simulation Complete!')
        
-        st.pyplot(fig)
+        st.pyplot(output[0])
+        st.write(f'Total Mains Usage: {output[1]} litres')
+        st.write(f'Min Peak Reduction: {output[2]}%')
+
     else:
         # Placeholder Progress Bar
         st.write("Press 'Run Simultation' to view results")
-
-
-# if d_mode == "Show Results":
-
-#     st.write('Example Results')
-
-#     @st.cache() 
-#     def read_data(pickle_path):
-#         file = open(pickle_path, 'rb')
-#         dtr = pk.load(file)
-#         file.close()
-
-#         return dtr
-
-#     pickle_path = 'data/temp_data/2022-09-02/SummerTank1.pkl'
-#     dtr = read_data(pickle_path)
-
-#     fig = quick_summary_report(dtr = dtr, timestep = 1440)
-#     st.pyplot(fig)
-
-
-######################################################
-# Notes
-# Show key stats as well - total mains demand, total peak mains demand, % improvement in month etc.
-
-
-# The largest manufactures of plastic rainwater tanks in New Zealand generally supply them in the following sizes: 
-# 1,000L, 2,000L, 3,000L/3,500L, 4,000L, 5,000L 9,000L, 10,000L, 13,500L, 15,000L 25,000L, 30,000L

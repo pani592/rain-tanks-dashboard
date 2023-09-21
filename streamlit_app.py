@@ -88,8 +88,8 @@ if d_mode == "Standard Tank":
 
     # Policy = st.sidebar.selectbox('Select Policy', (None, 'SeasonalTank'))
     Capacity = st.sidebar.selectbox('Select Tank Size [kL]', (25, 20, 15, 10, 5),index=2)
-    Occupancy = st.sidebar.selectbox('Select Occupancy', (1,2,3,4,5),index=1)
-    RoofArea = st.sidebar.selectbox('Select Roof Area', (100,150,200,250,300),index=1)
+    Occupancy = st.sidebar.selectbox('Select Occupancy', (1,2,3,4,5),index=2)
+    RoofArea = st.sidebar.selectbox('Select Roof Area', (100,150,200,250,300),index=2)
     StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
     StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
     st.write(f"Selected Parameters: Tank Capacity: {Capacity} kL | Occupancy: {Occupancy} | Roof Area: {RoofArea}m2 ")

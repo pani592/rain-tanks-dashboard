@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 from numpy import interp, roll
 
-from plotting import *
 from policies import *
 
 # Helper Functions
@@ -89,7 +88,7 @@ class Simulation(object):
             rain = pd.read_pickle("data/transformed_data/1b_Whenuapai_rf_nozeros.pkl").reset_index(drop=True)
             self.rain_interval = 1  # Hourly
         elif self.Tank.demand_interval == 1440:
-            rain = pd.read_pickle("data/transformed_data/1e_Whenuapai_rf_DAILY_nozeros.pkl").reset_index(drop=True)
+            rain = pd.read_parquet("data/transformed_data/daily_rainfall.parquet").reset_index(drop=True)
             self.rain_interval = 1  # Daily
 
         # Read in incorrect forecast, for possible use.
@@ -215,7 +214,7 @@ class Simulation(object):
             #     print(f"a: {a}, b: {b}, tankp: {tank_percent}, maxuse: {self.maxuse}, prop_tank: {prop_tank}")
             return min(1,prop_tank)# min(self.maxuse[event.month - 1], prop_tank)
 
-        if self.policy is 'XmasFill':
+        if self.policy == 'XmasFill':
             day = event.timetuple().tm_yday
             if 358 <= day <= 365:  # between dec 24 and Dec 31
                 # Historical period of LOW DEMAND in AUCKLAND - so fill tanks regardless of rain, to 100%
@@ -257,48 +256,4 @@ def data_verify(df):
     else:
         print('Bad: Negative volume in tank')
 
-    # Could add a raise error statement (when running multiple sims in ipynb the outputs are not all shown so can miss potential errors)
-
     return
-
-
-if __name__ == "__main__":
-    # Use this for testing / debugging only. Repeated runs are called from main.py
-
-    def repeat_sim(start_date, end_date, policy, attributes, interval):
-
-        tank = Tank(capacity=15000, init_volume=10000, area=212, harvest_ratio=1)
-        tank.set_demand(interval=interval, occupancy=3)
-        sim = Simulation(tank, start_date=start_date, end_date=end_date)
-        sim.set_policy(policy=policy, attributes=attributes)
-        sim.run_simulation()
-        # data_verify(sim.data_records)
-        # quick_summary(sim, savefig = True, showfig = True)
-        sim.data_records.to_pickle("data/temp_data/2022-08-10/"+savename+".pkl")
-        del sim
-        del tank
-
-    # repeat_sim('5/1/2014', '5/1/2016', None, {}, 60)
-    
-    start = time.process_time()
-    repeat_sim('5/1/2014', '8/1/2014', None, {}, 60)
-    mid = time.process_time()
-    repeat_sim('5/1/2015', '8/1/2015', None, {}, 60)
-    stop = time.process_time()
-    print(f'Mid {mid-start}, stop {stop-mid}')
-    # df_filepaths = ['data/temp_data/none.pkl', 'data/temp_data/exp0.9.pkl']
-    # compare_dfs(df_filepaths, plot=["Overflow", "Tank Volume"])
-
-
-
-##################################################################################################################################
-## Notes
-# - Discrete Event used (as opposed to Adaptive Time Step with interpolation) as simulation times are reasonable.
-
-# Tank Parameters from:
-# -- Consumption of 220 l/p/day: Code of Practise for Land Development and Subdivision. (#008). Section 6.3.5.6 peak day design
-# -- Avg Roof size of 212 m^2: https://aspectroofing.co.nz/useful_info/how-much-does-a-metal-roof-replacement-cost/
-# -- Avg Occupancy of 2.7 : https://www.stats.govt.nz/news/new-data-shows-1-in-9-children-under-the-age-of-five-lives-in-a-multi-family-household
-# -- Tank Size, taking middle option:  https://www.aucklandcouncil.govt.nz/environment/looking-after-aucklands-water/rainwater-tanks/Pages/rainwater-tank-size-calculator.aspx
-# ----- All water -> 27.5k, outdoor activties -> 0.9k, indoor nondrink-> 3.7k, 6.4k for previous 2 combined.
-# ---- using becas numbers -> single house 1 - 5 - 25 k. So lets go with 15 k..

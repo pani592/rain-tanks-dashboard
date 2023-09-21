@@ -97,18 +97,30 @@ if d_mode == "Standard Tank":
     st.write("---")
 
     if st.sidebar.button('Run Simulation'):
-        st.write('Simulation Running...')
         START_DATE = f"7/1/{StartYr}" 
         END_DATE = f"7/1/{StopYr}"
         Interval = 1440 # Has to be hourly timesteps for dashboard speed.
+        progress = st.progress(0)
+        for i in range(4):
+            # Update progress bar
+            progress.progress((i + 1) * 25)
 
-        tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=RoofArea, harvest_ratio=1)
-        tank.set_demand(Interval, Occupancy)
-        sim = Simulation(tank, START_DATE, END_DATE)
-        sim.set_policy(policy=None)
-        sim.run_simulation()
+            # Split simulation into stages (for demonstration purposes)
+            if i == 0:
+                # Initialize tank and set demand
+                tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=RoofArea, harvest_ratio=1)
+                tank.set_demand(Interval, Occupancy)
+            elif i == 1:
+                # Set policy and run part of the simulation
+                sim = Simulation(tank, START_DATE, END_DATE)
+                sim.set_policy(policy=None)
+            elif i == 2:
+                # Continue simulation
+                sim.run_simulation()
+            elif i == 3:
+                # Plot results
+                output = plotfig(sim)
 
-        output = plotfig(sim) 
         st.write('Simulation Complete!')
        
         st.pyplot(output[0])
@@ -132,20 +144,34 @@ if d_mode == "Drought Control":
     st.write(f"Default Parameters: Occupancy: 3 | Roof Area: 200m2 | Base Demand = 195 l/p/day")
     st.write("---")
 
+
     if st.sidebar.button('Run Simulation'):
-        st.write('Simulation Running...')
         START_DATE = f"7/1/{StartYr}" 
         END_DATE = f"7/1/{StopYr}"
         Interval = 1440 # Has to be hourly timesteps for dashboard speed.
-
         att = {'a_vals': xopts_final[Capacity][0:12], 'b_vals': xopts_final[Capacity][12:24]}
-        tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=200, harvest_ratio=1)
-        tank.set_demand(Interval, 3)
-        sim = Simulation(tank, START_DATE, END_DATE)
-        sim.set_policy(policy='SeasonalTank', attributes = att)
-        sim.run_simulation()
 
-        output = plotfig(sim) 
+        progress = st.progress(0)
+        for i in range(4):
+            # Update progress bar
+            progress.progress((i + 1) * 25)
+
+            # Split simulation into stages (for demonstration purposes)
+            if i == 0:
+                # Initialize tank and set demand
+                tank = Tank(capacity=Capacity*1000, init_volume=0.8*Capacity*1000, area=200, harvest_ratio=1)
+                tank.set_demand(Interval, 3)
+            elif i == 1:
+                # Set policy and run part of the simulation
+                sim = Simulation(tank, START_DATE, END_DATE)
+                sim.set_policy(policy='SeasonalTank', attributes = att)
+            elif i == 2:
+                # Continue simulation
+                sim.run_simulation()
+            elif i == 3:
+                # Plot results
+                output = plotfig(sim)
+
         st.write('Simulation Complete!')
        
         st.pyplot(output[0])

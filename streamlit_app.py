@@ -129,7 +129,7 @@ if d_mode == "Drought Control":
     StartYr = st.sidebar.selectbox('Select Start Yr (July)', range(2020,1970,-1))
     StopYr = st.sidebar.selectbox('Select End Yr (July)', range(StartYr+1,2022))
     st.write(f"Selected Parameters: Tank Capacity: {Capacity} kL")
-    st.write(f"Default Parameters: Occupancy: 3 | Roof Area: 200m2  Base Demand = 195 l/p/day")
+    st.write(f"Default Parameters: Occupancy: 3 | Roof Area: 200m2 | Base Demand = 195 l/p/day")
     st.write("---")
 
     if st.sidebar.button('Run Simulation'):

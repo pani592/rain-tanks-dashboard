@@ -2,7 +2,6 @@
 # https://blog.streamlit.io/make-your-st-pyplot-interactive/
 
 import streamlit as st
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view

@@ -1,4 +1,4 @@
-# streamlit run dashboard_streamlit.py
+# streamlit run streamlit_app.py
 # https://blog.streamlit.io/make-your-st-pyplot-interactive/
 
 import streamlit as st
